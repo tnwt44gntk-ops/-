@@ -1,0 +1,1 @@
+export default function Loading() { return <div className="loading-page" role="status"><div className="loading-orbit"><span>緣</span></div><p className="eyebrow">A MOMENT IN TIME</p><h2>시간의 문을 여는 중</h2><p>잠시만 기다려 주세요.</p></div>; }

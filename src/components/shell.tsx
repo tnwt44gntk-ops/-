@@ -1,0 +1,8 @@
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { useState } from 'react';
+const links = [{ href: '/', title: '시연 소개' }, { href: '/analyze/', title: '시대 찾기' }, { href: '/my-history/', title: '나의 역사' }];
+export function Header() { const path = usePathname(); const [open, setOpen] = useState(false); return <header className="site-header"><div className="header-inner"><Link className="brand" href="/" aria-label="시연 홈"><span className="brand-mark">緣</span><span>시연<span className="brand-hanja">時緣</span></span></Link><nav className="desktop-nav" aria-label="주 메뉴">{links.map(l => <Link key={l.href} href={l.href} aria-current={path.replace(/\/$/, '') === l.href.replace(/\/$/, '') ? 'page' : undefined}>{l.title}</Link>)}</nav><Link className="header-cta" href="/analyze/">나의 시대 찾기<ArrowUpRight size={16} /></Link><button className="mobile-menu" aria-label={open ? '메뉴 닫기' : '메뉴 열기'} aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-navigation" className="mobile-nav" aria-label="모바일 메뉴">{links.map(l => <Link href={l.href} key={l.href} onClick={() => setOpen(false)}>{l.title}</Link>)}</nav>}</header>; }
+export function Footer() { return <footer className="site-footer"><div><Link className="footer-brand" href="/">시연 <span>時緣</span></Link><p>시간을 넘어, 나를 만나는 인연.</p></div><div className="footer-right"><span>한국사 기반 AI 역사 체험 · MOCK PREVIEW</span><p>실제 AI·사주 계산 없이 제공되는 창작 체험입니다.</p><span className="copyright">© 2026 SIYEON. A journey through time.</span></div></footer>; }

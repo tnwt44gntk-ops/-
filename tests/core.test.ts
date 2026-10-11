@@ -1,0 +1,18 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { emptyBirth, validateBirth, seoulToday, type BirthInput } from '../src/lib/validation';
+import { addHistory, parseCurrent, parseHistory, type HistoryRecord } from '../src/lib/storage';
+import { eras, figures, jobs, elements } from '../src/lib/mock';
+const valid:BirthInput={date:'2000-02-29',calendar:'solar',leap:false,time:'13:30',unknownTime:false,region:'서울'};
+const record:HistoryRecord={id:'test',createdAt:'2026-10-11T12:00:00.000Z',birth:valid,mockVersion:'v1'};
+test('valid leap year and known time are accepted',()=>assert.deepEqual(validateBirth(valid,'2026-10-11'),{}));
+test('missing required inputs are reported',()=>assert.deepEqual(Object.keys(validateBirth(emptyBirth)).sort(),['date','region','time']));
+test('invalid solar dates and future dates are rejected',()=>{for(const date of ['2001-02-29','2000-04-31','1899-01-01','2000-00-10','2000-13-10','2027-01-01'])assert.ok(validateBirth({...valid,date},'2026-10-11').date,date);});
+test('unknown time is accepted without a time string',()=>assert.deepEqual(validateBirth({...valid,time:'',unknownTime:true}),{}));
+test('invalid time and unlisted region are rejected',()=>{assert.ok(validateBirth({...valid,time:'24:00'}).time);assert.ok(validateBirth({...valid,region:'알 수 없는 지역'}).region);});
+test('lunar format accepts 30 days and restricts leap checkbox to lunar',()=>{assert.deepEqual(validateBirth({...valid,calendar:'lunar',leap:true,date:'2000-02-30'}),{});assert.ok(validateBirth({...valid,calendar:'lunar',date:'2000-02-31'}).date);assert.ok(validateBirth({...valid,leap:true}).leap);});
+test('current date uses Asia/Seoul across UTC midnight boundary',()=>assert.equal(seoulToday(new Date('2026-10-10T16:00:00Z')),'2026-10-11'));
+test('records serialize and validate',()=>{assert.deepEqual(parseCurrent(JSON.stringify(record)),record);assert.deepEqual(parseHistory(JSON.stringify([record])),[record]);assert.equal(parseCurrent(null),null);assert.deepEqual(parseHistory(null),[]);});
+test('corrupted storage fails without silently deleting data',()=>{for(const raw of ['{','{}','[null]','[{"id":"test"}]'])assert.throws(()=>parseHistory(raw));assert.throws(()=>parseCurrent(JSON.stringify({...record,mockVersion:'v0'})));assert.throws(()=>parseCurrent(JSON.stringify({...record,birth:{...valid,unknownTime:'false'}})));});
+test('history save deduplicates by id and caps at 20',()=>{const list=Array.from({length:20},(_,i)=>({...record,id:String(i)}));assert.equal(addHistory(list,record).length,20);assert.equal(addHistory(list,{...record,id:'1'}).filter(r=>r.id==='1').length,1);});
+test('each TOP3 has three entries and percentages sum to 100',()=>{assert.equal(eras.length,3);assert.equal(figures.length,3);assert.equal(jobs.length,3);assert.equal(elements.reduce((sum,e)=>sum+e.value,0),100);});
